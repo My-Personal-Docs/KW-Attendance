@@ -1,0 +1,6 @@
+User-agent: *
+Disallow: /att-sum.txt
+Disallow: /COD Filter Plant.xls
+Disallow: /*.txt
+Disallow: /*.xls
+Disallow: /*.csv

@@ -5,9 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KW Attendance - Employee Search</title>
     <script>
-        // Check if user is logged in
-        if (sessionStorage.getItem('isLoggedIn') !== 'true') {
-            window.location.href = 'login.html';
+        // Enhanced security check
+        function validateSession() {
+            const isLoggedIn = sessionStorage.getItem('isLoggedIn');
+            const authToken = sessionStorage.getItem('authToken');
+            const loginTime = sessionStorage.getItem('loginTime');
+            
+            // Check if logged in
+            if (isLoggedIn !== 'true' || !authToken) {
+                window.location.href = 'login.html';
+                return false;
+            }
+            
+            // Check session timeout (8 hours)
+            if (loginTime) {
+                const loginDate = new Date(loginTime);
+                const now = new Date();
+                const hoursSinceLogin = (now - loginDate) / (1000 * 60 * 60);
+                
+                if (hoursSinceLogin > 8) {
+                    // Session expired
+                    sessionStorage.clear();
+                    alert('Session expired. Please login again.');
+                    window.location.href = 'login.html';
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+        
+        // Validate on page load
+        if (!validateSession()) {
+            // Redirect will happen in validateSession
         }
     </script>
     <style>
@@ -494,6 +524,11 @@
         // Load attendance data from the text file
         async function loadAttendanceData() {
             try {
+                // Verify session before loading data
+                if (!validateSession()) {
+                    return;
+                }
+                
                 const response = await fetch(currentFile);
                 const text = await response.text();
                 const lines = text.split('\n');

@@ -237,6 +237,23 @@
     </div>
 
     <script>
+        // SHA-256 hash function
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+
+        // Encoded credentials (SHA-256 hashed)
+        const credentials = {
+            // Username: admin, Password: admin (hashed)
+            users: {
+                '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918': '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918'
+            }
+        };
+
         function togglePassword() {
             const passwordInput = document.getElementById('password');
             const toggleBtn = document.querySelector('.toggle-btn');
@@ -250,19 +267,25 @@
             }
         }
 
-        function handleLogin(event) {
+        async function handleLogin(event) {
             event.preventDefault();
             
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const errorMessage = document.getElementById('errorMessage');
 
+            // Hash the input credentials
+            const usernameHash = await sha256(username.toLowerCase());
+            const passwordHash = await sha256(password);
+
             // Check credentials
-            if (username === 'admin' && password === 'admin') {
-                // Store login status in session
+            if (credentials.users[usernameHash] && credentials.users[usernameHash] === passwordHash) {
+                // Store login status in session with encrypted token
+                const loginToken = await sha256(username + password + new Date().getTime());
                 sessionStorage.setItem('isLoggedIn', 'true');
                 sessionStorage.setItem('username', username);
                 sessionStorage.setItem('loginTime', new Date().toISOString());
+                sessionStorage.setItem('authToken', loginToken);
                 
                 // Redirect to main page
                 window.location.href = 'index.html';

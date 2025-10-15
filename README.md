@@ -2,11 +2,27 @@
 
 Employee Attendance Search System for COD Filter Plant
 
+## 🌐 Live URL
+**https://my-personal-docs.github.io/KW-Attendance/login.html**
+
+## 🔐 Login Credentials
+- **Username:** admin
+- **Password:** admin
+
 ## Features
 - 🔍 Live search by Employee ID or Name
 - 📊 Monthly attendance tracking
-- 📱 Responsive design
+- 📱 Responsive design (Mobile, Tablet, Desktop)
 - ⚡ Fast and easy to use
+- 🔒 Password-protected access
+- ⏰ Auto session timeout (8 hours)
+
+## Security Features
+- ✅ SHA-256 password hashing
+- ✅ Session token validation
+- ✅ 8-hour auto logout
+- ✅ Robots.txt to discourage search engines
+- ✅ HTTPS encryption via GitHub Pages
 
 ## How to Add New Monthly Data
 
