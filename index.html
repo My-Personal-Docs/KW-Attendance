@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KW Attendance - Employee Search</title>
+    <script>
+        // Check if user is logged in
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'login.html';
+        }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .search-box {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+        }
+
+        .search-box h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .search-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .search-input-group input {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .search-input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .search-input-group button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .search-input-group button:hover {
+            transform: translateY(-2px);
+        }
+
+        .search-input-group button:active {
+            transform: translateY(0);
+        }
+
+        .result-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            display: none;
+        }
+
+        .result-container.show {
+            display: block;
+        }
+
+        .result-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .result-header h3 {
+            margin-bottom: 5px;
+        }
+
+        .result-header p {
+            opacity: 0.9;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .result-item {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-item label {
+            display: block;
+            font-weight: bold;
+            color: #555;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .result-item .value {
+            color: #333;
+            font-size: 16px;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #c33;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .stats-highlight {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .stat-card .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .header {
+            position: relative;
+        }
+
+        .user-info {
+            position: absolute;
+            top: 20px;
+            right: 120px;
+            color: #667eea;
+            font-weight: bold;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .suggestions-list {
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .suggestions-list.show {
+            display: block;
+        }
+
+        .suggestion-item {
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            margin-bottom: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.2s;
+        }
+
+        .suggestion-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .suggestion-item .emp-id {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 14px;
+        }
+
+        .suggestion-item .emp-name {
+            color: #333;
+            font-size: 16px;
+            margin-top: 3px;
+        }
+
+        .suggestion-item .emp-dept {
+            color: #666;
+            font-size: 12px;
+            margin-top: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <span class="user-info" id="userInfo">👤 Admin</span>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+            <h1>🏢 KW Attendance System</h1>
+            <p>COD Filter Plant</p>
+            <div style="margin-top: 15px;">
+                <label for="monthSelect" style="font-weight: bold; margin-right: 10px;">Select Month:</label>
+                <select id="monthSelect" onchange="loadSelectedMonth()" style="padding: 8px 15px; border-radius: 5px; border: 2px solid #667eea; font-size: 14px; cursor: pointer;">
+                    <option value="att-sum.txt">September 2025 (Sep 1-30)</option>
+                </select>
+            </div>
+            <p id="periodInfo" style="margin-top: 10px;"><strong>Period:</strong> September 1-30, 2025 | <strong>Created:</strong> October 1, 2025</p>
+        </div>
+
+        <div class="search-box">
+            <h2>🔍 Search Your Attendance</h2>
+            <div class="search-input-group">
+                <input type="text" id="employeeSearch" placeholder="Enter Employee ID or Name (live search)" oninput="searchEmployeeLive()" />
+                <button onclick="searchEmployee()">Search</button>
+            </div>
+            <div class="error-message" id="errorMessage"></div>
+            <div id="suggestionsList" class="suggestions-list"></div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p>Searching...</p>
+        </div>
+
+        <div class="result-container" id="resultContainer">
+            <div class="result-header">
+                <h3 id="employeeName">Employee Name</h3>
+                <p id="employeeDetails">Employee ID • Department</p>
+            </div>
+
+            <div class="stats-highlight" id="statsHighlight"></div>
+        </div>
+    </div>
+
+    <script>
+        let attendanceData = [];
+        let currentFile = 'att-sum.txt';
+
+        // Configuration for different months
+        const monthFiles = {
+            'att-sum.txt': {
+                name: 'September 2025',
+                period: 'September 1-30, 2025',
+                created: 'October 1, 2025'
+            }
+            // Add more months here as needed:
+            // 'att-sum-oct-2025.txt': {
+            //     name: 'October 2025',
+            //     period: 'October 1-31, 2025',
+            //     created: 'November 1, 2025'
+            // }
+        };
+
+        function loadSelectedMonth() {
+            const select = document.getElementById('monthSelect');
+            currentFile = select.value;
+            const monthInfo = monthFiles[currentFile];
+            
+            if (monthInfo) {
+                document.getElementById('periodInfo').innerHTML = 
+                    `<strong>Period:</strong> ${monthInfo.period} | <strong>Created:</strong> ${monthInfo.created}`;
+            }
+            
+            // Clear current data and reload
+            attendanceData = [];
+            document.getElementById('resultContainer').classList.remove('show');
+            document.getElementById('suggestionsList').classList.remove('show');
+            document.getElementById('employeeSearch').value = '';
+            
+            loadAttendanceData();
+        }
+
+        // Load attendance data from the text file
+        async function loadAttendanceData() {
+            try {
+                const response = await fetch(currentFile);
+                const text = await response.text();
+                const lines = text.split('\n');
+                
+                console.log('Loading file:', currentFile);
+                console.log('Total lines in file:', lines.length);
+                
+                // Skip header lines (first 4 lines)
+                for (let i = 4; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (line) {
+                        const parts = line.split('\t');
+                        if (parts.length > 1 && parts[0]) {
+                            const empId = parts[0].trim();
+                            attendanceData.push({
+                                employeeId: empId,
+                                name: parts[1] ? parts[1].trim() : '',
+                                department: parts[2] ? parts[2].trim() : '',
+                                workDurationStandard: parts[3] || '0',
+                                workDurationActual: parts[4] || '0',
+                                lateTimes: parts[5] || '0',
+                                lateDuration: parts[6] || '0',
+                                leaveEarlyTimes: parts[7] || '0',
+                                leaveEarlyDuration: parts[8] || '0',
+                                overtimeNormal: parts[9] || '0',
+                                overtimeSpecial: parts[10] || '0',
+                                lackTimes: parts[11] || '0',
+                                lackDuration: parts[12] || '0',
+                                attendanceDays: parts[13] || '0/0',
+                                absentDays: parts[14] || '0',
+                                onBusinessDays: parts[15] || '0',
+                                askOffDays: parts[16] || '0',
+                                rawLine: line
+                            });
+                        }
+                    }
+                }
+                console.log('Loaded', attendanceData.length, 'employee records');
+                console.log('Sample IDs:', attendanceData.slice(0, 5).map(e => e.employeeId));
+            } catch (error) {
+                console.error('Error loading attendance data:', error);
+            }
+        }
+
+        function searchEmployee() {
+            const searchInput = document.getElementById('employeeSearch').value.trim();
+            const errorMessage = document.getElementById('errorMessage');
+            const resultContainer = document.getElementById('resultContainer');
+            const loading = document.getElementById('loading');
+
+            // Clear previous results
+            errorMessage.classList.remove('show');
+            resultContainer.classList.remove('show');
+            
+            if (!searchInput) {
+                errorMessage.textContent = '⚠️ Please enter an Employee ID';
+                errorMessage.classList.add('show');
+                return;
+            }
+
+            // Show loading
+            loading.classList.add('show');
+
+            // Simulate search delay
+            setTimeout(() => {
+                loading.classList.remove('show');
+
+                console.log('Searching for:', searchInput);
+                console.log('Total records:', attendanceData.length);
+
+                const employee = attendanceData.find(emp => {
+                    const match = emp.employeeId.toLowerCase() === searchInput.toLowerCase();
+                    if (emp.employeeId.includes(searchInput)) {
+                        console.log('Partial match found:', emp.employeeId, emp.name);
+                    }
+                    return match;
+                });
+
+                console.log('Found employee:', employee);
+
+                if (employee) {
+                    displayEmployeeData(employee);
+                } else {
+                    errorMessage.textContent = `❌ No employee found with ID: ${searchInput}. Please check the ID and try again.`;
+                    errorMessage.classList.add('show');
+                }
+            }, 300);
+        }
+
+        function displayEmployeeData(employee) {
+            const resultContainer = document.getElementById('resultContainer');
+            const employeeName = document.getElementById('employeeName');
+            const employeeDetails = document.getElementById('employeeDetails');
+            const statsHighlight = document.getElementById('statsHighlight');
+            const resultGrid = document.getElementById('resultGrid');
+
+            // Set header
+            employeeName.textContent = employee.name;
+            employeeDetails.textContent = `ID: ${employee.employeeId} • ${employee.department}`;
+
+            // Parse attendance days
+            const attendanceParts = employee.attendanceDays.split('/');
+            const standardDays = attendanceParts[0] || '0';
+            const actualDays = attendanceParts[1] || '0';
+            const absentDays = employee.absentDays || '0';
+
+            // Create stat highlights
+            statsHighlight.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${actualDays}</div>
+                    <div class="stat-label">Days Present</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${absentDays}</div>
+                    <div class="stat-label">Days Absent</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${employee.lateTimes || '0'}</div>
+                    <div class="stat-label">Late Arrivals</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${employee.leaveEarlyTimes || '0'}</div>
+                    <div class="stat-label">Early Departures</div>
+                </div>
+            `;
+
+            resultContainer.classList.add('show');
+        }
+
+        function searchEmployeeLive() {
+            const searchInput = document.getElementById('employeeSearch').value.trim();
+            const suggestionsList = document.getElementById('suggestionsList');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            // Clear error message
+            errorMessage.classList.remove('show');
+            
+            if (!searchInput || searchInput.length < 2) {
+                suggestionsList.classList.remove('show');
+                suggestionsList.innerHTML = '';
+                return;
+            }
+
+            // Search for matching employees
+            const matches = attendanceData.filter(emp => {
+                const searchLower = searchInput.toLowerCase();
+                return emp.employeeId.toLowerCase().includes(searchLower) || 
+                       emp.name.toLowerCase().includes(searchLower);
+            });
+
+            if (matches.length > 0) {
+                // Show top 10 matches
+                const topMatches = matches.slice(0, 10);
+                suggestionsList.innerHTML = topMatches.map(emp => `
+                    <div class="suggestion-item" onclick="selectEmployee('${emp.employeeId}')">
+                        <div class="emp-id">ID: ${emp.employeeId}</div>
+                        <div class="emp-name">${emp.name}</div>
+                        <div class="emp-dept">${emp.department}</div>
+                    </div>
+                `).join('');
+                suggestionsList.classList.add('show');
+            } else {
+                suggestionsList.innerHTML = '<div class="suggestion-item" style="border-left-color: #c33;">No matches found</div>';
+                suggestionsList.classList.add('show');
+            }
+        }
+
+        function selectEmployee(employeeId) {
+            document.getElementById('employeeSearch').value = employeeId;
+            document.getElementById('suggestionsList').classList.remove('show');
+            searchEmployee();
+        }
+
+        // Allow Enter key to search
+        document.getElementById('employeeSearch').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                searchEmployee();
+            }
+        });
+
+        // Load data when page loads
+        loadAttendanceData();
+
+        // Display username
+        const username = sessionStorage.getItem('username');
+        if (username) {
+            document.getElementById('userInfo').textContent = `👤 ${username.charAt(0).toUpperCase() + username.slice(1)}`;
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                sessionStorage.removeItem('isLoggedIn');
+                sessionStorage.removeItem('username');
+                sessionStorage.removeItem('loginTime');
+                window.location.href = 'login.html';
+            }
+        }
+    </script>
+</body>
+</html>
