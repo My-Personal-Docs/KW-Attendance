@@ -5,24 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KW Attendance - Employee Search</title>
     <script>
-        // Enhanced security check
+        // Enhanced security check and auto logout timer
+        const AUTO_LOGOUT_MINUTES = 5;
+        let logoutTimeout, timerInterval, timeLeft;
+
         function validateSession() {
             const isLoggedIn = sessionStorage.getItem('isLoggedIn');
             const authToken = sessionStorage.getItem('authToken');
             const loginTime = sessionStorage.getItem('loginTime');
-            
             // Check if logged in
             if (isLoggedIn !== 'true' || !authToken) {
                 window.location.href = 'login.html';
                 return false;
             }
-            
             // Check session timeout (8 hours)
             if (loginTime) {
                 const loginDate = new Date(loginTime);
                 const now = new Date();
                 const hoursSinceLogin = (now - loginDate) / (1000 * 60 * 60);
-                
                 if (hoursSinceLogin > 8) {
                     // Session expired
                     sessionStorage.clear();
@@ -31,10 +31,49 @@
                     return false;
                 }
             }
-            
+            // Start auto logout timer if session is valid
+            startLogoutTimer();
+            // Reset timer on user activity
+            ['click', 'keydown', 'mousemove', 'touchstart'].forEach(evt => {
+                document.addEventListener(evt, resetLogoutTimer);
+            });
             return true;
         }
-        
+
+        function startLogoutTimer() {
+            timeLeft = AUTO_LOGOUT_MINUTES * 60;
+            updateTimerDisplay();
+            document.getElementById('logout-timer').style.display = 'block';
+            clearTimeout(logoutTimeout);
+            clearInterval(timerInterval);
+            logoutTimeout = setTimeout(autoLogout, timeLeft * 1000);
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const min = Math.floor(timeLeft / 60);
+            const sec = timeLeft % 60;
+            document.getElementById('logout-timer').textContent =
+                `You will be automatically logged out in ${min}:${sec.toString().padStart(2, '0')} minutes for security reasons.`;
+        }
+
+        function autoLogout() {
+            sessionStorage.clear();
+            window.location.href = 'login.html?timeout=1';
+        }
+
+        function resetLogoutTimer() {
+            clearTimeout(logoutTimeout);
+            clearInterval(timerInterval);
+            startLogoutTimer();
+        }
+
         // Validate on page load
         if (!validateSession()) {
             // Redirect will happen in validateSession
