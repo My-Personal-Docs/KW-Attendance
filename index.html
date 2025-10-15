@@ -483,6 +483,7 @@
 </head>
 <body>
     <div class="container">
+        <div id="debugInfo" style="display:none; margin-bottom:16px; padding:10px; background:#e3f7e3; color:#256029; border-radius:6px; border:1px solid #b2e2b2; text-align:left; font-size:1em;"></div>
         <div class="header">
             <span class="user-info" id="userInfo">👤 Admin</span>
             <button class="logout-btn" onclick="logout()">Logout</button>
@@ -523,8 +524,9 @@
     </div>
 
     <script>
-        let attendanceData = [];
-        let currentFile = 'att-sum.txt';
+    let attendanceData = [];
+    let currentFile = 'att-sum.txt';
+    let dataLoaded = false;
 
         // Configuration for different months
         const monthFiles = {
@@ -567,14 +569,12 @@
                 if (!validateSession()) {
                     return;
                 }
-                
+                dataLoaded = false;
+                document.getElementById('loading').classList.add('show');
                 const response = await fetch(currentFile);
                 const text = await response.text();
                 const lines = text.split('\n');
-                
-                console.log('Loading file:', currentFile);
-                console.log('Total lines in file:', lines.length);
-                
+                attendanceData = [];
                 // Skip header lines (first 4 lines)
                 for (let i = 4; i < lines.length; i++) {
                     const line = lines[i].trim();
@@ -605,10 +605,16 @@
                         }
                     }
                 }
-                console.log('Loaded', attendanceData.length, 'employee records');
-                console.log('Sample IDs:', attendanceData.slice(0, 5).map(e => e.employeeId));
+                dataLoaded = true;
+                document.getElementById('loading').classList.remove('show');
+                // Show debug info
+                const debugBox = document.getElementById('debugInfo');
+                debugBox.style.display = 'block';
+                const sampleIds = attendanceData.slice(0, 10).map(e => e.employeeId).join(', ');
+                debugBox.innerHTML = `<b>Debug Info:</b> Loaded <b>${attendanceData.length}</b> records.<br>Sample IDs: <span style='color:#007700'>${sampleIds}</span>`;
             } catch (error) {
                 console.error('Error loading attendance data:', error);
+                document.getElementById('loading').classList.remove('show');
             }
         }
 
@@ -621,7 +627,13 @@
             // Clear previous results
             errorMessage.classList.remove('show');
             resultContainer.classList.remove('show');
-            
+
+            if (!dataLoaded) {
+                errorMessage.textContent = '⏳ Data is still loading. Please wait a moment.';
+                errorMessage.classList.add('show');
+                return;
+            }
+
             if (!searchInput) {
                 errorMessage.textContent = '⚠️ Please enter an Employee ID';
                 errorMessage.classList.add('show');
