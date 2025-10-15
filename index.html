@@ -298,6 +298,118 @@
             font-size: 12px;
             margin-top: 3px;
         }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 20px 15px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .user-info {
+                position: static;
+                display: inline-block;
+                margin-bottom: 10px;
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+
+            .logout-btn {
+                position: static;
+                display: block;
+                width: 100%;
+                margin-top: 15px;
+                padding: 10px;
+            }
+
+            .search-box {
+                padding: 20px;
+            }
+
+            .search-box h2 {
+                font-size: 18px;
+            }
+
+            .search-input-group {
+                flex-direction: column;
+            }
+
+            .search-input-group input,
+            .search-input-group button {
+                width: 100%;
+            }
+
+            .stats-highlight {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .stat-card {
+                padding: 15px;
+            }
+
+            .stat-card .stat-value {
+                font-size: 24px;
+            }
+
+            .stat-card .stat-label {
+                font-size: 12px;
+            }
+
+            .result-container {
+                padding: 20px;
+            }
+
+            .result-header {
+                padding: 15px;
+            }
+
+            .result-header h3 {
+                font-size: 18px;
+            }
+
+            .result-header p {
+                font-size: 12px;
+            }
+
+            .suggestion-item {
+                padding: 10px;
+            }
+
+            .suggestion-item .emp-name {
+                font-size: 14px;
+            }
+
+            #monthSelect {
+                width: 100%;
+                margin-top: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .stats-highlight {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-card .stat-value {
+                font-size: 28px;
+            }
+        }
     </style>
 </head>
 <body>
