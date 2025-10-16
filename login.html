@@ -52,6 +52,34 @@
             z-index: 1;
         }
 
+        .bubble {
+            position: fixed;
+            bottom: -100px;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.6), rgba(200,230,255,0.3));
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 2;
+            will-change: transform, opacity;
+        }
+
+        @keyframes float-up {
+            0% {
+                transform: translateY(0) translateX(0);
+                opacity: 0.6;
+            }
+            50% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(-150vh) translateX(var(--drift, 0px));
+                opacity: 0;
+            }
+        }
+
+        @keyframes bubble1 { from { animation-timing-function: ease-in; } }
+        @keyframes bubble2 { from { animation-timing-function: ease-in; } }
+        @keyframes bubble3 { from { animation-timing-function: ease-in; } }
+
         @keyframes wave {
             0% { background-position: 0 0; }
             100% { background-position: 600px 0; }
@@ -186,6 +214,10 @@
         @media (max-width: 768px) {
             body {
                 padding: 10px;
+            }
+
+            body::after {
+                height: 200px;
             }
 
             .login-container {
@@ -357,6 +389,67 @@
             }
         `;
         document.head.appendChild(style);
+
+        // Floating water bubbles for mobile devices
+        function spawnBubble() {
+            // Only spawn bubbles on mobile viewports
+            if (window.innerWidth > 768) {
+                return;
+            }
+
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+
+            // Random size between 20px and 60px
+            const size = Math.random() * 40 + 20;
+            bubble.style.width = size + 'px';
+            bubble.style.height = size + 'px';
+
+            // Random horizontal position
+            const leftPos = Math.random() * (window.innerWidth - size);
+            bubble.style.left = leftPos + 'px';
+
+            // Random animation duration between 4 and 8 seconds
+            const duration = Math.random() * 4 + 4;
+            bubble.style.animation = `float-up ${duration}s ease-in forwards`;
+
+            // Add slight horizontal drift by adding random rotation
+            const drift = (Math.random() - 0.5) * 100;
+            bubble.style.setProperty('--drift', drift + 'px');
+
+            document.body.appendChild(bubble);
+
+            // Remove bubble from DOM after animation completes
+            setTimeout(() => {
+                bubble.remove();
+            }, duration * 1000);
+        }
+
+        // Start spawning bubbles on mobile devices
+        function startBubbleAnimation() {
+            if (window.innerWidth <= 768) {
+                // Spawn first bubble immediately
+                spawnBubble();
+                
+                // Spawn new bubbles every 0.5-1.5 seconds
+                setInterval(() => {
+                    if (window.innerWidth <= 768) {
+                        spawnBubble();
+                    }
+                }, Math.random() * 1000 + 500);
+            }
+        }
+
+        // Start bubble animation when page loads
+        document.addEventListener('DOMContentLoaded', startBubbleAnimation);
+
+        // Also handle window resize to stop bubbles if resized to desktop
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                // Clear all existing bubbles on resize to desktop
+                document.querySelectorAll('.bubble').forEach(bubble => bubble.remove());
+            }
+        });
     </script>
 </body>
 </html>
