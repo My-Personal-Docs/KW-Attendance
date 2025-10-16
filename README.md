@@ -26,61 +26,29 @@ Employee Attendance Search System for COD Filter Plant
 
 ## How to Add New Monthly Data
 
-### Step 1: Add your monthly text file
-Save your new attendance report as a text file, for example:
-- `att-sum-oct-2025.txt` for October 2025
-- `att-sum-nov-2025.txt` for November 2025
-- etc.
+There are two easy options now.
 
-### Step 2: Update the month selector
-Open `index.html` and find this section (around line 270):
+### Option A) Paste-ready TXT/CSV (no Python)
+1) Export or copy the monthly sheet data to a text file (tab-separated) named like:
+   - `att-sum-oct-2025.txt` (preferred) or a CSV `att-sum-oct-2025.csv`.
+2) Commit and push the file to the repo root.
+3) Update `months.json` (optional). If you skip this, the site will still load `att-sum.txt` and any files found via the generator once you run Option B.
 
-```javascript
-const monthFiles = {
-    'att-sum.txt': {
-        name: 'September 2025',
-        period: 'September 1-30, 2025',
-        created: 'October 1, 2025'
-    }
-    // Add new months below:
-};
-```
+### Option B) Use helper scripts (recommended)
+1) Convert Excel -> CSV
+   - Install once: `pip install pandas xlrd openpyxl`
+   - Run: `python3 scripts/convert_excel_to_csv.py --input "COD Filter Plant.xls" --sheet "Sheet1" --output "att-sum-oct-2025.csv"`
+2) Generate/refresh months.json
+   - Run: `python3 scripts/generate_manifest.py`
+   - This scans for `*.txt` and `*.csv` and writes `months.json` automatically.
+3) Commit and push the new files.
 
-Add your new month like this:
-
-```javascript
-const monthFiles = {
-    'att-sum.txt': {
-        name: 'September 2025',
-        period: 'September 1-30, 2025',
-        created: 'October 1, 2025'
-    },
-    'att-sum-oct-2025.txt': {
-        name: 'October 2025',
-        period: 'October 1-31, 2025',
-        created: 'November 1, 2025'
-    }
-};
-```
-
-### Step 3: Add the dropdown option
-Find the `<select id="monthSelect">` section (around line 227) and add a new option:
-
-```html
-<select id="monthSelect" onchange="loadSelectedMonth()">
-    <option value="att-sum.txt">September 2025 (Sep 1-30)</option>
-    <option value="att-sum-oct-2025.txt">October 2025 (Oct 1-31)</option>
-</select>
-```
-
-### Step 4: Done!
-That's it! The page will now show a dropdown to select different months.
+The site reads `months.json` and populates the month dropdown automatically, no code edits needed.
 
 ## File Format
-The text file should have the same format as the current `att-sum.txt`:
-- First 4 lines are headers
-- Tab-separated values
-- Columns: Employee ID, Name, Department, Work Duration, Late, Leave Early, etc.
+Both TSV (`.txt`) and CSV (`.csv`) are supported.
+- Headers can be like the current `att-sum.txt` (first 4 lines) — parser will auto-skip header.
+- Required columns (first 3): Employee ID, Name, Department (remaining columns are parsed if present).
 
 ## Usage
 1. Open `index.html` in a web browser
