@@ -8,6 +8,16 @@
         // Enhanced security check and auto logout timer
         const AUTO_LOGOUT_MINUTES = 5;
         let logoutTimeout, timerInterval, timeLeft;
+        let timerInitialized = false;
+        let listenersAttached = false;
+
+        function onDomReady(fn) {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', fn, { once: true });
+            } else {
+                fn();
+            }
+        }
 
         function validateSession() {
             const isLoggedIn = sessionStorage.getItem('isLoggedIn');
@@ -31,19 +41,31 @@
                     return false;
                 }
             }
-            // Start auto logout timer if session is valid
-            startLogoutTimer();
-            // Reset timer on user activity
-            ['click', 'keydown', 'mousemove', 'touchstart'].forEach(evt => {
-                document.addEventListener(evt, resetLogoutTimer);
-            });
+            // Start auto logout timer after DOM is ready (avoid null element)
+            ensureTimerSetup();
             return true;
+        }
+
+        function ensureTimerSetup() {
+            if (timerInitialized) return;
+            onDomReady(() => {
+                if (timerInitialized) return;
+                timerInitialized = true;
+                startLogoutTimer();
+                if (!listenersAttached) {
+                    ['click', 'keydown', 'mousemove', 'touchstart'].forEach(evt => {
+                        document.addEventListener(evt, resetLogoutTimer);
+                    });
+                    listenersAttached = true;
+                }
+            });
         }
 
         function startLogoutTimer() {
             timeLeft = AUTO_LOGOUT_MINUTES * 60;
             updateTimerDisplay();
-            document.getElementById('logout-timer').style.display = 'block';
+            const timerEl = document.getElementById('logout-timer');
+            if (timerEl) timerEl.style.display = 'block';
             clearTimeout(logoutTimeout);
             clearInterval(timerInterval);
             logoutTimeout = setTimeout(autoLogout, timeLeft * 1000);
@@ -59,8 +81,10 @@
         function updateTimerDisplay() {
             const min = Math.floor(timeLeft / 60);
             const sec = timeLeft % 60;
-            document.getElementById('logout-timer').textContent =
-                `You will be automatically logged out in ${min}:${sec.toString().padStart(2, '0')} minutes for security reasons.`;
+            const timerEl = document.getElementById('logout-timer');
+            if (timerEl) {
+                timerEl.textContent = `You will be automatically logged out in ${min}:${sec.toString().padStart(2, '0')} minutes for security reasons.`;
+            }
         }
 
         function autoLogout() {
@@ -496,6 +520,7 @@
                 </select>
             </div>
             <p id="periodInfo" style="margin-top: 10px;"><strong>Period:</strong> September 1-30, 2025 | <strong>Created:</strong> October 1, 2025</p>
+            <div id="logout-timer" style="display:none; margin:16px auto 0; max-width:520px; padding:10px; background:#fff3cd; color:#856404; border-radius:6px; border:1px solid #ffeeba; text-align:center; font-size:1.05em;"></div>
         </div>
 
         <div class="search-box">
@@ -650,12 +675,15 @@
                 console.log('Searching for:', searchInput);
                 console.log('Total records:', attendanceData.length);
 
+                const q = searchInput.toLowerCase();
                 const employee = attendanceData.find(emp => {
-                    const match = emp.employeeId.toLowerCase() === searchInput.toLowerCase();
-                    if (emp.employeeId.includes(searchInput)) {
+                    const idMatch = (emp.employeeId || '').toLowerCase() === q;
+                    const nameMatch = (emp.name || '').toLowerCase() === q;
+                    const partial = (emp.employeeId || '').toLowerCase().includes(q) || (emp.name || '').toLowerCase().includes(q);
+                    if (partial) {
                         console.log('Partial match found:', emp.employeeId, emp.name);
                     }
-                    return match;
+                    return idMatch || nameMatch;
                 });
 
                 console.log('Found employee:', employee);
@@ -726,8 +754,8 @@
             // Search for matching employees
             const matches = attendanceData.filter(emp => {
                 const searchLower = searchInput.toLowerCase();
-                return emp.employeeId.toLowerCase().includes(searchLower) || 
-                       emp.name.toLowerCase().includes(searchLower);
+                return (emp.employeeId || '').toLowerCase().includes(searchLower) || 
+                       (emp.name || '').toLowerCase().includes(searchLower);
             });
 
             if (matches.length > 0) {
