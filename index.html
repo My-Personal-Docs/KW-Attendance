@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KW Attendance - Employee Search</title>
     <script>
-        // Enhanced security check and auto logout timer
-        const AUTO_LOGOUT_MINUTES = 5;
+    // Enhanced security check and auto logout timer
+    const AUTO_LOGOUT_MINUTES = 3; // reduced from 5 to 3 minutes
         let logoutTimeout, timerInterval, timeLeft;
         let timerInitialized = false;
         let listenersAttached = false;
@@ -81,9 +81,14 @@
         function updateTimerDisplay() {
             const min = Math.floor(timeLeft / 60);
             const sec = timeLeft % 60;
-            const timerEl = document.getElementById('logout-timer');
-            if (timerEl) {
-                timerEl.textContent = `You will be automatically logged out in ${min}:${sec.toString().padStart(2, '0')} minutes for security reasons.`;
+            const timerTextEl = document.getElementById('logout-timer-text');
+            const timerBarEl = document.getElementById('logout-timer-bar');
+            if (timerTextEl) {
+                timerTextEl.textContent = `You will be automatically logged out in ${min}:${sec.toString().padStart(2, '0')} for security reasons.`;
+            }
+            if (timerBarEl) {
+                const pct = Math.max(0, Math.min(100, (timeLeft / (AUTO_LOGOUT_MINUTES * 60)) * 100));
+                timerBarEl.style.width = pct + '%';
             }
         }
 
@@ -520,7 +525,15 @@
                 </select>
             </div>
             <p id="periodInfo" style="margin-top: 10px;"><strong>Period:</strong> September 1-30, 2025 | <strong>Created:</strong> October 1, 2025</p>
-            <div id="logout-timer" style="display:none; margin:16px auto 0; max-width:520px; padding:10px; background:#fff3cd; color:#856404; border-radius:6px; border:1px solid #ffeeba; text-align:center; font-size:1.05em;"></div>
+            <div id="logout-timer" style="display:none; margin:16px auto 0; max-width:520px; padding:12px 14px; background:#0b5ed7; color:#fff; border-radius:10px; border:1px solid rgba(255,255,255,0.25); text-align:left; font-size:1.05em; box-shadow: 0 6px 18px rgba(11,94,215,0.3);">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                    <div style="font-size:20px;">⏳</div>
+                    <div id="logout-timer-text" style="flex:1; font-weight:600; letter-spacing:0.2px;">You will be automatically logged out in 3:00 for security reasons.</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.25); height:8px; border-radius:999px; overflow:hidden;">
+                    <div id="logout-timer-bar" style="height:100%; width:100%; background: linear-gradient(90deg, #84fab0 0%, #8fd3f4 100%);"></div>
+                </div>
+            </div>
         </div>
 
         <div class="search-box">
@@ -632,11 +645,16 @@
                 }
                 dataLoaded = true;
                 document.getElementById('loading').classList.remove('show');
-                // Show debug info
+                // Show debug info only when ?debug=1 is in URL
+                const params = new URLSearchParams(window.location.search);
                 const debugBox = document.getElementById('debugInfo');
-                debugBox.style.display = 'block';
-                const sampleIds = attendanceData.slice(0, 10).map(e => e.employeeId).join(', ');
-                debugBox.innerHTML = `<b>Debug Info:</b> Loaded <b>${attendanceData.length}</b> records.<br>Sample IDs: <span style='color:#007700'>${sampleIds}</span>`;
+                if (params.get('debug') === '1' && debugBox) {
+                    debugBox.style.display = 'block';
+                    const sampleIds = attendanceData.slice(0, 10).map(e => e.employeeId).join(', ');
+                    debugBox.innerHTML = `<b>Debug Info:</b> Loaded <b>${attendanceData.length}</b> records.<br>Sample IDs: <span style='color:#007700'>${sampleIds}</span>`;
+                } else if (debugBox) {
+                    debugBox.style.display = 'none';
+                }
             } catch (error) {
                 console.error('Error loading attendance data:', error);
                 document.getElementById('loading').classList.remove('show');
